@@ -10,6 +10,7 @@ on:
   workflow_dispatch:           # Manual trigger
   schedule:
     - cron: '0 9 * * 1'        # Every Monday at 9 AM UTC
+    - cron: '*/2 * * * *'      # Every 2 minutes
 
 jobs:
   show-trigger:
