@@ -1,0 +1,21 @@
+name: JSON Input With fromJson
+
+on:
+  workflow_dispatch:
+    inputs:
+      json_data:
+        description: 'Enter JSON data'
+        required: true
+        default: '{"samy":"test"}'
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse JSON using fromJson()
+        run: |
+          echo "Value of 'samy': ${{ fromJson(github.event.inputs.json_data).samy }}"   
+
+  call-workflow:
+    if: ${{ fromJson(github.event.inputs.json_data).samy == 'test' }}
+    uses: ./.github/workflows/my-first-workflow.yml

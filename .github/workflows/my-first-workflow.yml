@@ -1,7 +1,8 @@
 name: My First Workflow
 
-on: [push]
-
+on:
+  workflow_call: 
+    
 jobs:
   hello-job:
     runs-on: ubuntu-latest
