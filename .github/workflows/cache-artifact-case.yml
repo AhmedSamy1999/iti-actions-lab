@@ -1,55 +1,40 @@
-name: Build, Package, and Push Docker Image
+name: Build Docker Image, Scan with Trivy, and Push
 
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: maven-
-
-      - name: Build with Maven
-        run: mvn clean package
-
-      - name: Upload built jar
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-jar
-          path: target/*.jar
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download jar artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: my-jar
-          path: target
+       
+      # - name: Set up Java
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     java-version: '17'
+      #     distribution: 'temurin'
 
-      - name: List JAR file
-        run: ls -l target/
+      # - name: Cache Maven dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.m2
+      #     key: maven-${{ hashFiles('**/pom.xml') }}
+      #     restore-keys: maven-
 
+      # - name: Build with Maven
+      #   run: mvn clean package
 
+      # - name: Upload built jar
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: my-jar
+      #     path: target/*.jar
+
+      
+      # Docker Build & Push
       - name: Log in to DockerHub
         uses: docker/login-action@v3
         with:
@@ -59,5 +44,21 @@ jobs:
       - name: Build Docker image
         run: docker build -t samycloud/my-java-app:latest .
 
+      
+      # Trivy 
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Scan with trivy on image
+        run: trivy image samycloud/my-java-app:latest
+
+      
+      # Push to DockerHub
       - name: Push Docker image
         run: docker push samycloud/my-java-app:latest
