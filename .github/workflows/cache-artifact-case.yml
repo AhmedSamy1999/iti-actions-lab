@@ -44,9 +44,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: my-jar
+          path: target
 
       - name: List JAR file
         run: ls -l target/
+
 
       - name: Log in to DockerHub
         uses: docker/login-action@v3
